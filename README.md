@@ -101,6 +101,30 @@ dependencies:
 #### Build and Install
 
 ```bash
+# Linux dnf repos
+sudo dnf update -y
+sudo dnf install -y epel-release
+sudo dnf config-manager --set-enabled crb
+sudo dnf makecache
+
+# Add git
+sudo dnf install -y git
+
+# Set up the Conda env
+cd $HOME
+
+# Add Miniconda virtual environment support
+wget --no-check-certificate https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+chmod -v +x Miniconda3-latest-Linux-x86_64.sh
+./Miniconda3-latest-Linux-x86_64.sh
+
+# Accept the Conda license terms for the repos
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+
+# Update Conda
+conda update -n base -c defaults conda
+
 # Create conda environment
 conda env create -f environment.yaml
 conda activate Pixal3D
@@ -114,19 +138,68 @@ export NATTEN_CUDA_ARCH="8.6"
 export TORCH_CUDA_ARCH_LIST="8.6"
 export MAX_JOBS=8
 export CUDA_HOME=$CONDA_PREFIX
+export CUDACXX=$CONDA_PREFIX/bin/nvcc
+export CPATH=$CONDA_PREFIX/include:$CPATH
+export LIBRARY_PATH=$CONDA_PREFIX/lib:$LIBRARY_PATH
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 python setup.py build_ext --inplace
 pip install --editable . --no-build-isolation
+
+# Download and install Pixal3D-MCP
+cd $HOME/
+git clone --recursive https://github.com/Lightfielder/Pixal3D-MCP.git
+cd $HOME/Pixal3D-MCP/
+uv pip install --no-build-isolation -r requirements.txt
 ```
 
 ### 3. Hugging Face Token Setup
 
-Pixal3D uses the Bria AI "RMGB v2.0" model. You need a Hugging Face token:
+Pixal3D uses the Bria AI "[RMGB v2.0](https://huggingface.co/briaai/RMBG-2.0)" model. You need to agree to the RMGB model's non-commercial license terms to be able to use it. If you have not done so then Pixal3D will report the following error in the terminal whent the inference.py script is launched:
 
-1. Generate a token at https://huggingface.co/settings/tokens
-2. Run authentication:
+```bash
+OSError: You are trying to access a gated repo.
+Make sure to have access to it at https://huggingface.co/briaai/RMBG-2.0.
+403 Client Error. (Request ID: Root=1-6a050af0-56492db66f4b2c0c06cf7809;6ef33523-2961-4d57-8801-b28b5d8f92fe)
+
+Cannot access gated repo for url https://huggingface.co/briaai/RMBG-2.0/resolve/main/config.json.
+Access to model briaai/RMBG-2.0 is restricted and you are not in the authorized list. Visit https://huggingface.co/briaai/RMBG-2.0 to ask for access.
+```
+
+Use the Hugging Face website to generate a personal access token:
+
+1. Go to [Settings → Access Tokens](https://huggingface.co/settings/tokens) page to Generate a token
+2. Click the "New token" button. Name the token something memorable like "Pixal3D". Click on the "Fine-grained" option near the top of the webpage. Do not select the "Read" option.
+3. Under the "User permissions > Repositories" section enable the checkbox next to the "Read access to contents of all public gated repos you can access" option.
+4. Click the "Generate token" button. Copy the token string that starts with "hf_".
+
+Then run the following Hugging Face command from a Linux terminal session, to save the personal access token locally on the Linux system:
 
 ```bash
 hf auth login
+```
+
+The output should lool like:
+
+```bash
+$ hf auth login
+
+    _|    _|  _|    _|    _|_|_|    _|_|_|  _|_|_|  _|      _|    _|_|_|      _|_|_|_|    _|_|      _|_|_|  _|_|_|_|
+    _|    _|  _|    _|  _|        _|          _|    _|_|    _|  _|            _|        _|    _|  _|        _|
+    _|_|_|_|  _|    _|  _|  _|_|  _|  _|_|    _|    _|  _|  _|  _|  _|_|      _|_|_|    _|_|_|_|  _|        _|_|_|
+    _|    _|  _|    _|  _|    _|  _|    _|    _|    _|    _|_|  _|    _|      _|        _|    _|  _|        _|
+    _|    _|    _|_|      _|_|_|    _|_|_|  _|_|_|  _|      _|    _|_|_|      _|        _|    _|    _|_|_|  _|_|_|_|
+
+    A token is already saved on your machine. Run `hf auth whoami` to get more information or `hf auth logout` if you want to log out.
+    Setting a new token will erase the existing one.
+    To log in, `huggingface_hub` requires a token generated from https://huggingface.co/settings/tokens .
+Enter your token (input will not be visible): 
+Add token as git credential? (Y/n) y
+Token is valid (permission: fineGrained).
+The token `Pixal3D` has been saved to /home/vfx/.cache/huggingface/stored_tokens
+Your token has been saved in your configured git credential helpers (store).
+Your token has been saved to /home/vfx/.cache/huggingface/token
+Login successful.
+The current active token is: `Pixal3D`
 ```
 
 ### 4. Configure MCP Client
@@ -145,6 +218,92 @@ Add this to your MCP client settings (e.g., Zed IDE):
   }
 }
 ```
+
+## How to activate the Conda Virtual Environment
+
+```bash
+conda activate Pixal3D
+cd $HOME/Pixal3D/
+```
+
+## How to Remove the Pixal3D Repo Files / Conda Virtual Environment
+
+```bash
+cd $HOME
+
+conda deactivate
+conda env remove -n Pixal3D
+sudo rm -rf $HOME/Pixal3D/
+cd $HOME
+```
+
+## Direct CLI Usage
+
+The MCP server wraps the underlying Pixal3D CLI:
+
+```bash
+conda activate Pixal3D
+cd Pixal3D-MCP
+
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+python inference.py --image assets/images/0_img.png --output ./output.glb --max_num_tokens 12288
+```
+
+The terminal should show a result like:
+
+```bash
+python inference.py --image assets/images/0_img.png --output ./output.glb --max_num_tokens 4096
+[SPARSE] Conv backend: flex_gemm; Attention backend: flash_attn_3
+GPU Memory: 0.00GB allocated
+[Pipeline] Loading from TencentARC/Pixal3D...
+[ATTENTION] Using backend: flash_attn_3
+/home/vfx/miniconda3/envs/Pixal3D/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/home/vfx/miniconda3/envs/Pixal3D/lib/python3.10/site-packages/timm/models/registry.py:4: FutureWarning: Importing from timm.models.registry is deprecated, please import via timm.models
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.models", FutureWarning)
+[Pipeline] Loaded successfully
+[Pipeline] low_vram = True
+[Pipeline] Moving to GPU...
+[Pipeline] On GPU
+GPU Memory: 0.00GB allocated
+[ImageCond] Loading SS model...
+  SS model loaded
+GPU Memory: 1.13GB allocated
+[Inference] Processing image: assets/images/0_img.png
+  Using default camera parameters
+[ImageCond] Loading Shape 512 model...
+  Loading NAF upsampler for shape 512...
+Using cache found in /home/vfx/.cache/torch/hub/valeoai_NAF_main
+GPU Memory: 2.27GB allocated
+[ImageCond] Loading Shape 1024 model...
+  Loading NAF upsampler for shape 1024...
+Using cache found in /home/vfx/.cache/torch/hub/valeoai_NAF_main
+GPU Memory: 3.40GB allocated
+[ImageCond] Loading Texture model...
+  Loading NAF upsampler for texture...
+Using cache found in /home/vfx/.cache/torch/hub/valeoai_NAF_main
+GPU Memory: 4.54GB allocated
+[Inference] Running 3D generation pipeline...
+Sampling sparse structure (proj): 100%|███████████████████████████| 12/12 [00:05<00:00,  2.04it/s]
+Sampling shape SLat (proj): 100%|█████████████████████████████████| 12/12 [00:07<00:00,  1.64it/s]
+Sampling HR shape SLat (proj, 1024): 100%|████████████████████████| 12/12 [00:42<00:00,  3.56s/it]
+Sampling texture SLat (proj): 100%|███████████████████████████████| 12/12 [00:23<00:00,  2.00s/it]
+[Memory] Unloading models...
+GPU Memory: 0.39GB allocated
+[Inference] Extracting GLB...
+Cleaning mesh:  33%|████████████████                                | 2/6 [00:04<00:09,  2.41s/it]/home/vfx/miniconda3/envs/Pixal3D/lib/python3.10/site-packages/cumesh/remeshing.py:220: UserWarning: Using torch.cross without specifying the dim arg is deprecated.
+Please either pass the dim explicitly or simply use torch.linalg.cross.
+The default value of dim will change to agree with that of linalg.cross in a future release. (Triggered internally at /pytorch/aten/src/ATen/native/Cross.cpp:62.)
+  normals0 = torch.cross(mesh_vertices[atempt_triangles_0[:, 1]] - mesh_vertices[atempt_triangles_0[:, 0]], mesh_vertices[atempt_triangles_0[:, 2]] - mesh_vertices[atempt_triangles_0[:, 0]])
+Finalizing mesh: 100%|██████████████████████████████████████████████| 6/6 [00:13<00:00,  2.23s/it]
+[Done] GLB saved to: ./output.glb
+```
+
+On NVIDIA RTX GPUs with limited memory you might get a terminal result from Pixal3D with a CUDA out of memory error like this:
+
+```bash
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 1024.00 MiB. GPU 0 has a total capacity of 23.54 GiB of which 265.62 MiB is free. Process 3256 has 264.75 MiB memory in use. Including non-PyTorch memory, this process has 22.52 GiB memory in use. Of the allocated memory 22.13 GiB is allocated by PyTorch, and 39.62 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+``
 
 ## Available Tools
 
@@ -332,18 +491,6 @@ Sample images are included in the `assets/images/` folder:
 
 - `0_img.png` - Classic test image  
 - Various other test images in `.png`, `.webp`, `.jpg` formats. 
-
-## Direct CLI Usage
-
-The MCP server wraps the underlying Pixal3D CLI:
-
-```bash
-conda activate Pixal3D
-cd Pixal3D-MCP
-
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-python inference.py --image assets/images/0_img.png --output ./output.glb --max_num_tokens 12288
-```
 
 ## Web Links
 
