@@ -126,6 +126,7 @@ conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 conda update -n base -c defaults conda
 
 # Create conda environment
+cd $HOME/Pixal3D-MCP/
 conda env create -f environment.yaml
 conda activate Pixal3D
 
