@@ -227,7 +227,7 @@ Add this to your MCP client settings (e.g., Zed IDE):
 
 ```bash
 conda activate Pixal3D
-cd $HOME/Pixal3D/
+cd $HOME/Pixal3D-MCP/
 ```
 
 ## How to Remove the Pixal3D Repo Files / Conda Virtual Environment
@@ -237,7 +237,7 @@ cd $HOME
 
 conda deactivate
 conda env remove -n Pixal3D
-sudo rm -rf $HOME/Pixal3D/
+sudo rm -rf $HOME/Pixal3D-MCP/
 cd $HOME
 ```
 
