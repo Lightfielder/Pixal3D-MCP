@@ -55,9 +55,9 @@ cd Pixal3D-MCP
 
 ### 2. Install Dependencies
 
-#### Create Conda Environment
+#### Conda Environment
 
-Create an `environment.yaml` file with these contents:
+The `Pixal3D-MCP/environment.yaml` file exists with these contents. It allows the rapid creation of a new Conda virtual environment with the required dependencies.
 
 ```yaml
 name: Pixal3D
