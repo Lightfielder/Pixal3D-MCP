@@ -17,8 +17,8 @@ Pixal3D generates high-fidelity 3D assets from a single image. Unlike previous m
 
 ```
 Pixal3D-MCP/
-├── src/pixal3d_mcp/       # Python package (MCP server implementation)
-│   ├── __init__.py
+├── src/pixal3d_mcp/        # Python package (MCP server implementation)
+│   ├── __init__.py         # Python Init File
 │   └── server.py           # MCP server with 8 tools
 ├── assets/                 # Sample images for testing
 │   └── images/             # Test images (0_img.png, etc.)
