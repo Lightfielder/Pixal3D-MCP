@@ -105,7 +105,8 @@ dependencies:
 conda env create -f environment.yaml
 conda activate Pixal3D
 
-# Install Natten (required for attention)
+# Install Natten
+cd $HOME
 git clone --recursive https://github.com/SHI-Labs/NATTEN.git
 cd NATTEN
 git checkout v0.17.3
