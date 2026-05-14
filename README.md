@@ -251,12 +251,22 @@ python inference.py --image assets/images/0_img.png --output ./output.glb --max_
 The terminal should show a result like:
 
 ```bash
-python inference.py --image assets/images/0_img.png --output ./output.glb --max_num_tokens 4096
+python inference.py --image assets/images/0_img.png --output ./output.glb --max_num_tokens 12288
 [SPARSE] Conv backend: flex_gemm; Attention backend: flash_attn_3
+ _______  ___   __   __  _______  ___      _______  ______          __   __  _______  _______
+|       ||   | |  |_|  ||   _   ||   |    |       ||      |        |  |_|  ||       ||       |
+|    _  ||   | |       ||  |_|  ||   |    |___    ||  _    | ____  |       ||       ||    _  |
+|   |_| ||   | |       ||       ||   |     ___|   || | |   ||____| |       ||       ||   |_| |
+|    ___||   |  |     | |       ||   |___ |___    || |_|   |       |       ||      _||    ___|
+|   |    |   | |   _   ||   _   ||       | ___|   ||       |       | ||_|| ||     |_ |   |
+|___|    |___| |__| |__||__| |__||_______||_______||______|        |_|   |_||_______||___|    
+     Pixal3D generates high-fidelity 3D assets from a single image
+======================================================================
+
 GPU Memory: 0.00GB allocated
 [Pipeline] Loading from TencentARC/Pixal3D...
 [ATTENTION] Using backend: flash_attn_3
-/home/vfx/miniconda3/envs/Pixal3D/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+/home/vfx/miniconda3/envs/Pixal3D/lib/python3.10/site-packages/timm/models/layers/__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
   warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
 /home/vfx/miniconda3/envs/Pixal3D/lib/python3.10/site-packages/timm/models/registry.py:4: FutureWarning: Importing from timm.models.registry is deprecated, please import via timm.models
   warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.models", FutureWarning)
@@ -283,18 +293,18 @@ GPU Memory: 3.40GB allocated
 Using cache found in /home/vfx/.cache/torch/hub/valeoai_NAF_main
 GPU Memory: 4.54GB allocated
 [Inference] Running 3D generation pipeline...
-Sampling sparse structure (proj): 100%|███████████████████████████| 12/12 [00:05<00:00,  2.04it/s]
-Sampling shape SLat (proj): 100%|█████████████████████████████████| 12/12 [00:07<00:00,  1.64it/s]
-Sampling HR shape SLat (proj, 1024): 100%|████████████████████████| 12/12 [00:42<00:00,  3.56s/it]
-Sampling texture SLat (proj): 100%|███████████████████████████████| 12/12 [00:23<00:00,  2.00s/it]
+Sampling sparse structure (proj): 100%|██████████████████████████████████████████████████████████████████████████| 12/12 [00:06<00:00,  1.92it/s]
+Sampling shape SLat (proj): 100%|████████████████████████████████████████████████████████████████████████████████| 12/12 [00:07<00:00,  1.58it/s]
+Sampling HR shape SLat (proj, 1024): 100%|███████████████████████████████████████████████████████████████████████| 12/12 [00:44<00:00,  3.70s/it]
+Sampling texture SLat (proj): 100%|██████████████████████████████████████████████████████████████████████████████| 12/12 [00:26<00:00,  2.17s/it]
 [Memory] Unloading models...
 GPU Memory: 0.39GB allocated
 [Inference] Extracting GLB...
-Cleaning mesh:  33%|████████████████                                | 2/6 [00:04<00:09,  2.41s/it]/home/vfx/miniconda3/envs/Pixal3D/lib/python3.10/site-packages/cumesh/remeshing.py:220: UserWarning: Using torch.cross without specifying the dim arg is deprecated.
+Cleaning mesh:  33%|███████████████████████████████▋                                                               | 2/6 [00:04<00:09,  2.49s/it]/home/vfx/miniconda3/envs/Pixal3D/lib/python3.10/site-packages/cumesh/remeshing.py:220: UserWarning: Using torch.cross without specifying the dim arg is deprecated.
 Please either pass the dim explicitly or simply use torch.linalg.cross.
 The default value of dim will change to agree with that of linalg.cross in a future release. (Triggered internally at /pytorch/aten/src/ATen/native/Cross.cpp:62.)
   normals0 = torch.cross(mesh_vertices[atempt_triangles_0[:, 1]] - mesh_vertices[atempt_triangles_0[:, 0]], mesh_vertices[atempt_triangles_0[:, 2]] - mesh_vertices[atempt_triangles_0[:, 0]])
-Finalizing mesh: 100%|██████████████████████████████████████████████| 6/6 [00:13<00:00,  2.23s/it]
+Finalizing mesh: 100%|█████████████████████████████████████████████████████████████████████████████████████████████| 6/6 [00:12<00:00,  2.00s/it]
 [Done] GLB saved to: ./output.glb
 ```
 
