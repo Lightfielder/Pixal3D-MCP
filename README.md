@@ -148,7 +148,7 @@ pip install --editable . --no-build-isolation
 
 # Install the Pixal3D-MCP dependencies
 cd $HOME/Pixal3D-MCP/
-uv pip install --no-build-isolation -r requirements.txt
+uv pip install --no-build-isolation --extra-index-url https://download.pytorch.org/whl/cu124 -r requirements.txt
 ```
 
 ### 3. Hugging Face Token Setup
