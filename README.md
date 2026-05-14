@@ -17,18 +17,23 @@ Pixal3D generates high-fidelity 3D assets from a single image. Unlike previous m
 
 ```
 Pixal3D-MCP/
-├── src/pixal3d_mcp/     # Python package (MCP server implementation)
+├── src/pixal3d_mcp/       # Python package (MCP server implementation)
 │   ├── __init__.py
-│   └── server.py          # MCP server with 8 tools
-├── assets/               # Sample images for testing
-│   └── images/           # Test images (0_img.png, etc.)
-├── pixal3d/              # Core Pixal3D library (from TencentARC/Pixal3D)
-├── mcp.json              # MCP configuration for uvx
-├── pyproject.toml        # Python package config
-├── environment.yaml      # Conda environment definition
-├── requirements.txt      # All dependencies (PyTorch, custom wheels, etc.)
-├── inference.py          # Reference CLI script
-└── LICENSE               # License files
+│   └── server.py           # MCP server with 8 tools
+├── assets/                 # Sample images for testing
+│   └── images/             # Test images (0_img.png, etc.)
+├── tests/                  # Unit Tests
+│   └── __init__.py         # Init File
+│   └── test_pixal3d_mcp.py # Test Script
+├── pixal3d/                # Core Pixal3D library (from TencentARC/Pixal3D)
+├── mcp.json                # MCP configuration for uvx
+├── Rules.json              # Rules configuration
+├── pyproject.toml          # Python package config
+├── environment.yaml        # Conda environment definition
+├── requirements.txt        # All dependencies (PyTorch, custom wheels, etc.)
+├── inference.py            # Reference CLI script
+└── README.md               # This document
+└── LICENSE                 # License files
 ```
 
 ## Software Requirements
