@@ -1,0 +1,405 @@
+{
+  "name": "Pixal3D-MCP Artist Workflow Rules",
+  "version": "1.0.0",
+  "description": "Automation rules for Pixal3D-MCP image-to-3D generation in VFX and animation pipelines",
+
+  "tool_schemas": {
+    "load_pipeline": {
+      "description": "Load Pixal3D models into GPU memory before inference",
+      "parameters": {},
+      "example": {"name": "load_pipeline", "arguments": {}}
+    },
+    "unload_pipeline": {
+      "description": "Free GPU memory when done",
+      "parameters": {},
+      "example": {"name": "unload_pipeline", "arguments": {}}
+    },
+    "run_inference": {
+      "description": "Convert single image to 3D GLB mesh",
+      "parameters": {
+        "image": {"type": "string", "required": true, "description": "Input image path"},
+        "output": {"type": "string", "default": "./output.glb"},
+        "seed": {"type": "integer", "default": 42},
+        "max_num_tokens": {"type": "integer", "default": 4096, "description": "Memory limit: 1024=low, 4096=medium, 12288=high quality"}
+      },
+      "example": {"name": "run_inference", "arguments": {"image": "input.png", "output": "result.glb", "max_num_tokens": 12288}}
+    },
+    "run_inference_sequence": {
+      "description": "Batch convert image sequence to 3D meshes",
+      "parameters": {
+        "input_path": {"type": "string", "required": true},
+        "output_template": {"type": "string"},
+        "frame_start": {"type": "integer"},
+        "frame_end": {"type": "integer"},
+        "frame_step": {"type": "integer", "default": 1},
+        "seed": {"type": "integer", "default": 42},
+        "max_num_tokens": {"type": "integer", "default": 4096},
+        "auto_detect": {"type": "boolean", "default": true}
+      },
+      "supported_patterns": {
+        "Maya": ["render_0001.png", "render.####.png"],
+        "After Effects": ["sequence_0001.png", "sequence_####.png"],
+        "Fusion": ["image_0001.png", "image.0001.png"],
+        "Nuke/Foundry": ["image.%04d.png"],
+        "Houdini": ["image.$F4.png"],
+        "IFL": ["sequence.ifl"]
+      }
+    },
+    "preview_images": {
+      "description": "Fast thumbnail previews without GPU inference",
+      "parameters": {
+        "image_paths": {"type": "array"},
+        "input_path": {"type": "string"},
+        "max_size": {"type": "integer", "default": 256}
+      }
+    },
+    "preview_model": {
+      "description": "Render GLB to PNG preview using 3d-to-image",
+      "parameters": {
+        "glb_paths": {"type": "array"},
+        "input_path": {"type": "string"},
+        "max_size": {"type": "integer", "default": 512}
+      }
+    },
+    "preview_model_sequence": {
+      "description": "Render GLB sequence with frame range filtering",
+      "parameters": {
+        "input_path": {"type": "string", "required": true},
+        "frame_start": {"type": "integer"},
+        "frame_end": {"type": "integer"},
+        "max_size": {"type": "integer", "default": 512}
+      }
+    },
+    "get_memory_status": {
+      "description": "Check GPU memory usage",
+      "parameters": {}
+    },
+    "cleanup_memory": {
+      "description": "Run garbage collection and clear CUDA cache",
+      "parameters": {}
+    },
+    "load_conda_env": {
+      "description": "Load conda environment variables for Zed IDE integration",
+      "parameters": {"env_name": {"type": "string", "default": "Pixal3D"}}
+    },
+    "list_conda_envs": {
+      "description": "Discover available conda environments",
+      "parameters": {}
+    }
+  },
+
+  "memory_tiers": {
+    "1024": {"quality": "minimal", "memory_mb": "~4GB", "use_case": "Preview/thumbnail generation"},
+    "2048": {"quality": "lower", "memory_mb": "~6GB", "use_case": "Quick tests"},
+    "4096": {"quality": "default", "memory_mb": "~8GB", "use_case": "Production default"},
+    "12288": {"quality": "higher", "memory_mb": "~16GB", "use_case": "Final render/hero shots"}
+  },
+
+  "workflows": {
+    "basic_single_image": {
+      "title": "Basic Single Image to 3D",
+      "description": "Simple workflow for converting one image to a 3D mesh",
+      "steps": [
+        {"tool": "list_conda_envs", "description": "Verify Pixal3D environment is available"},
+        {"tool": "load_conda_env", "arguments": {"env_name": "Pixal3D"}},
+        {"tool": "load_pipeline", "description": "Load models into GPU memory"},
+        {"tool": "preview_images", "arguments": {"input_path": "input.png", "max_size": 512}, "description": "Preview input before processing"},
+        {"tool": "run_inference", "arguments": {"image": "input.png", "output": "result.glb", "max_num_tokens": 4096}},
+        {"tool": "preview_model", "arguments": {"input_path": "result.glb", "max_size": 512}, "description": "Verify output"},
+        {"tool": "unload_pipeline", "description": "Free GPU memory when done"}
+      ]
+    },
+
+    "batch_sequence_maya": {
+      "title": "Maya Render Sequence Batch Processing",
+      "description": "Process a Maya render sequence (e.g., render_0001.png) to 3D meshes",
+      "steps": [
+        {"tool": "load_conda_env", "arguments": {"env_name": "Pixal3D"}},
+        {"tool": "load_pipeline"},
+        {"tool": "preview_images", "arguments": {"input_path": "renders/render_0001.png"}, "description": "Preview first frame of Maya sequence"},
+        {"tool": "run_inference_sequence", "arguments": {
+          "input_path": "renders/render_0001.png",
+          "output_template": "output/mesh_####.glb",
+          "frame_step": 1,
+          "max_num_tokens": 4096
+        }},
+        {"tool": "preview_model_sequence", "arguments": {"input_path": "output/mesh_####.glb", "max_size": 512}},
+        {"tool": "unload_pipeline"}
+      ]
+    },
+
+    "houdini_flipbook": {
+      "title": "Houdini Flipbook Sequence",
+      "description": "Process Houdini $F4-style flipbook sequences",
+      "steps": [
+        {"tool": "load_conda_env", "arguments": {"env_name": "Pixal3D"}},
+        {"tool": "load_pipeline"},
+        {"tool": "run_inference_sequence", "arguments": {
+          "input_path": "flipbook/image.$F4.png",
+          "output_template": "3d_output/mesh_####.glb",
+          "max_num_tokens": 4096
+        }},
+        {"tool": "unload_pipeline"}
+      ],
+      "note": "Auto-detects Houdini $F1-$F9 padding patterns"
+    },
+
+    "nuke_sequence": {
+      "title": "Nuke/Foundry Write Node Sequence",
+      "description": "Process Nuke printf-style sequences (image.%04d.png)",
+      "steps": [
+        {"tool": "load_conda_env", "arguments": {"env_name": "Pixal3D"}},
+        {"tool": "load_pipeline"},
+        {"tool": "run_inference_sequence", "arguments": {
+          "input_path": "nuke_write/image.%04d.png",
+          "output_template": "3d_cache/mesh%04d.glb",
+          "max_num_tokens": 12288
+        }},
+        {"tool": "unload_pipeline"}
+      ]
+    },
+
+    "every_nth_frame": {
+      "title": "Every Nth Frame (Time-Saving)",
+      "description": "Process every 5th frame for quick turnaround, then full sequence for final",
+      "phases": [
+        {
+          "name": "Quick Preview",
+          "steps": [
+            {"tool": "load_pipeline"},
+            {"tool": "run_inference_sequence", "arguments": {
+              "input_path": "sequence_0001.png",
+              "output_template": "preview/mesh_####.glb",
+              "frame_step": 5,
+              "max_num_tokens": 2048
+            }},
+            {"tool": "unload_pipeline"}
+          ]
+        },
+        {
+          "name": "Full Quality Final",
+          "steps": [
+            {"tool": "load_pipeline"},
+            {"tool": "run_inference_sequence", "arguments": {
+              "input_path": "sequence_0001.png",
+              "output_template": "final/mesh_####.glb",
+              "max_num_tokens": 12288
+            }},
+            {"tool": "unload_pipeline"}
+          ]
+        }
+      ]
+    },
+
+    "vfx_production_pipeline": {
+      "title": "VFX Production Pipeline",
+      "description": "End-to-end VFX workflow with memory management",
+      "steps": [
+        {"tool": "list_conda_envs", "description": "Verify environment availability"},
+        {"tool": "load_conda_env", "arguments": {"env_name": "Pixal3D"}},
+        {"tool": "get_memory_status", "description": "Check available GPU memory"},
+        {"tool": "load_pipeline", "description": "Load with low_vram mode enabled"},
+        {"tool": "preview_images", "arguments": {"input_path": "plates/hero_shot_0001.png", "max_size": 512}, "description": "Review input plates"},
+        {"tool": "run_inference", "arguments": {
+          "image": "plates/hero_shot_0001.png",
+          "output": "3d/hero_shot.glb",
+          "max_num_tokens": 12288
+        }, "description": "Process hero element at highest quality"},
+        {"tool": "run_inference_sequence", "arguments": {
+          "input_path": "plates/background_0001.png",
+          "output_template": "3d/bg_####.glb",
+          "frame_step": 1,
+          "max_num_tokens": 4096
+        }, "description": "Background plates at default quality"},
+        {"tool": "preview_model", "arguments": {"input_path": "3d/hero_shot.glb", "max_size": 1024}, "description": "High-res preview of hero element"},
+        {"tool": "preview_model_sequence", "arguments": {"input_path": "3d/bg_####.glb", "max_size": 512}},
+        {"tool": "get_memory_status", "description": "Verify memory state before cleanup"},
+        {"tool": "cleanup_memory"},
+        {"tool": "unload_pipeline"}
+      ]
+    },
+
+    "archviz_batch": {
+      "title": "ArchViz Batch Processing",
+      "description": "Process multiple property images for architectural visualization",
+      "steps": [
+        {"tool": "load_conda_env", "arguments": {"env_name": "Pixal3D"}},
+        {"tool": "load_pipeline"},
+        {"tool": "preview_images", "arguments": {
+          "image_paths": ["property1.png", "property2.png", "property3.png", "property4.png"],
+          "max_size": 512
+        }},
+        {"tool": "run_inference", "arguments": {"image": "property1.png", "output": "archviz/property1.glb", "max_num_tokens": 12288}},
+        {"tool": "run_inference", "arguments": {"image": "property2.png", "output": "archviz/property2.glb", "max_num_tokens": 12288}},
+        {"tool": "run_inference", "arguments": {"image": "property3.png", "output": "archviz/property3.glb", "max_num_tokens": 12288}},
+        {"tool": "run_inference", "arguments": {"image": "property4.png", "output": "archviz/property4.glb", "max_num_tokens": 12288}},
+        {"tool": "preview_model", "arguments": {"glb_paths": ["archviz/property1.glb", "archviz/property2.glb", "archviz/property3.glb", "archviz/property4.glb"], "max_size": 768}},
+        {"tool": "unload_pipeline"}
+      ]
+    },
+
+    "animation_production": {
+      "title": "Animation Character Turntable",
+      "description": "Process character turntable sequence from renderfarm",
+      "steps": [
+        {"tool": "load_conda_env", "arguments": {"env_name": "Pixal3D"}},
+        {"tool": "load_pipeline"},
+        {"tool": "preview_images", "arguments": {"input_path": "turntable/char_$F4.png"}, "description": "Preview character turntable frames"},
+        {"tool": "run_inference_sequence", "arguments": {
+          "input_path": "turntable/char_$F4.png",
+          "output_template": "3d_char/char_####.glb",
+          "max_num_tokens": 12288
+        }},
+        {"tool": "preview_model_sequence", "arguments": {
+          "input_path": "3d_char/char_####.glb",
+          "max_size": 1024
+        }},
+        {"tool": "unload_pipeline"}
+      ]
+    },
+
+    "quality_comparison": {
+      "title": "Quality Comparison Test",
+      "description": "Compare outputs at different memory/quality settings",
+      "steps": [
+        {"tool": "load_conda_env", "arguments": {"env_name": "Pixal3D"}},
+        {"tool": "load_pipeline"},
+        {"tool": "run_inference", "arguments": {"image": "test.png", "output": "comparison/low.glb", "max_num_tokens": 1024}},
+        {"tool": "cleanup_memory"},
+        {"tool": "run_inference", "arguments": {"image": "test.png", "output": "comparison/medium.glb", "max_num_tokens": 4096}},
+        {"tool": "cleanup_memory"},
+        {"tool": "run_inference", "arguments": {"image": "test.png", "output": "comparison/high.glb", "max_num_tokens": 12288}},
+        {"tool": "preview_model", "arguments": {"glb_paths": ["comparison/low.glb", "comparison/medium.glb", "comparison/high.glb"], "max_size": 512}},
+        {"tool": "unload_pipeline"}
+      ]
+    }
+  },
+
+  "ifl_workflows": {
+    "custom_frame_list": {
+      "title": "IFL Custom Frame List",
+      "description": "Use IFL file for non-sequential or custom frame selection",
+      "example_ifl_content": "# Custom frame list for selective processing\n# Format: one image path per line (absolute or relative to IFL location)\n/projects/vfx/plates/hero_0101.png\n/projects/vfx/plates/hero_0105.png\n/projects/vfx/plates/hero_0110.png",
+      "steps": [
+        {"tool": "load_conda_env", "arguments": {"env_name": "Pixal3D"}},
+        {"tool": "load_pipeline"},
+        {"tool": "preview_images", "arguments": {"input_path": "selected_frames.ifl"}},
+        {"tool": "run_inference_sequence", "arguments": {
+          "input_path": "selected_frames.ifl",
+          "output_template": "output/mesh_####.glb"
+        }},
+        {"tool": "unload_pipeline"}
+      ]
+    }
+  },
+
+  "memory_optimization": {
+    "sequential_processing": {
+      "description": "Process large sequences by loading/unloading pipeline per frame to avoid OOM",
+      "pattern": [
+        "For each frame: load_pipeline -> run_inference -> unload_pipeline -> cleanup_memory"
+      ]
+    },
+    "low_vram_mode": {
+      "description": "Pipeline is automatically loaded with low_vram=True for GPU efficiency",
+      "code": "PIPELINE.low_vram = True  # Already set in load_pipeline()"
+    },
+    "adaptive_quality": {
+      "description": "Adjust max_num_tokens based on GPU memory availability",
+      "check": "get_memory_status -> if available < 4GB use 1024, if > 8GB use 12288"
+    }
+  },
+
+  "output_formats": {
+    "glb": {
+      "extension": ".glb",
+      "description": "GLB binary mesh format with embedded textures",
+      "texture_size": 1024,
+      "decimation_target": 200000,
+      "features": ["PBR textures", "geometry", "UV coordinates"]
+    }
+  },
+
+  "pattern_examples": {
+    "Maya_standard": {
+      "input": "render_0001.png",
+      "output": "mesh_####.glb",
+      "description": "Standard Maya padding"
+    },
+    "Maya_hash": {
+      "input": "render.####.png",
+      "output": "mesh.####.glb",
+      "description": "Maya hash notation"
+    },
+    "AfterEffects": {
+      "input": "sequence_0001.png",
+      "output": "mesh_####.glb",
+      "description": "After Effects padding"
+    },
+    "Fusion_dot": {
+      "input": "image.0001.png",
+      "output": "mesh.0001.glb",
+      "description": "Fusion dot notation"
+    },
+    "Nuke_printf": {
+      "input": "image.%04d.png",
+      "output": "mesh.%04d.glb",
+      "description": "Nuke printf-style"
+    },
+    "Houdini_variable": {
+      "input": "image.$F4.png",
+      "output": "mesh.$F4.glb",
+      "description": "Houdini $F1-$F9 variable padding"
+    },
+    "IFL_file": {
+      "input": "sequence.ifl",
+      "output": "mesh_####.glb",
+      "description": "Image File List text file"
+    }
+  },
+
+  "error_recovery": {
+    "oom_handling": {
+      "symptoms": ["CUDA out of memory", "get_memory_status shows high usage"],
+      "recovery": [
+        "Call cleanup_memory",
+        "Call unload_pipeline",
+        "Retry with lower max_num_tokens (1024 or 2048)"
+      ]
+    },
+    "missing_files": {
+      "symptoms": ["File not found errors in sequence"],
+      "recovery": [
+        "Use preview_images to verify input paths",
+        "Check frame range with frame_start and frame_end"
+      ]
+    }
+  },
+
+  "integration_tips": {
+    "Zed_IDE": {
+      "description": "MCP server runs in background, connect via mcp.json",
+      "config": {
+        "command": "uvx",
+        "args": ["git+https://github.com/Lightfielder/Pixal3D-MCP.git"]
+      },
+      "note": "Use load_conda_env first if running from desktop app without pre-activated conda"
+    },
+    "hot_reload": {
+      "description": "For development, changes to server.py require server restart",
+      "workflow": ["Edit server.py", "Restart MCP server", "Test changes"]
+    }
+  },
+
+  "performance_notes": {
+    "inference_time": {
+      "1024_tokens": "~30-60 seconds per frame",
+      "4096_tokens": "~60-120 seconds per frame",
+      "12288_tokens": "~2-5 minutes per frame"
+    },
+    "memory_overhead": {
+      "pipeline_loading": "~2-3GB",
+      "per_inference": "varies by max_num_tokens"
+    }
+  }
+}

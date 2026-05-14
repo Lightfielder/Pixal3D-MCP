@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "pixal3d": {
+      "command": "uvx",
+      "args": ["git+https://github.com/Lightfielder/Pixal3D-MCP.git"]
+    }
+  }
+}

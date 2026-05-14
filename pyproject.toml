@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pixal3d-mcp"
+version = "1.0.0"
+description = "An MCP server for running Pixal3D image-to-3D inference"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = "==3.10.*"
+authors = [
+    { name = "Tencent" }
+]
+keywords = ["pixal3d", "mcp", "image-to-3d", "3d", "generation"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: Other/Proprietary License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Graphics :: 3D",
+    "Topic :: Multimedia :: Graphics",
+]
+
+dependencies = [
+    "torch",
+    "numpy",
+    "Pillow",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+
+[project.scripts]
+pixal3d-mcp = "pixal3d_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/TencentARC/Pixal3D"
+Repository = "https://github.com/TencentARC/Pixal3D"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pixal3d_mcp"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/README.md",
+    "/LICENSE",
+]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::FutureWarning:timm.models.layers:",
+    "ignore::FutureWarning:timm.models.registry:",
+]

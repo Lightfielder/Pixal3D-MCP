@@ -1,0 +1,15 @@
+.DS_Store
+._.DS_Store
+Thumbs.db
+
+# Byte-compiled files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Distribution / packaging
+*.egg
+*.egg-info/
+dist/
+build/
