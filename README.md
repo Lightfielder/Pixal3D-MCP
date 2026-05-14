@@ -145,9 +145,7 @@ export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 python setup.py build_ext --inplace
 pip install --editable . --no-build-isolation
 
-# Download and install Pixal3D-MCP
-cd $HOME/
-git clone --recursive https://github.com/Lightfielder/Pixal3D-MCP.git
+# Install the Pixal3D-MCP dependencies
 cd $HOME/Pixal3D-MCP/
 uv pip install --no-build-isolation -r requirements.txt
 ```
