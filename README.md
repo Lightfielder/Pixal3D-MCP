@@ -247,7 +247,7 @@ The MCP server wraps the underlying Pixal3D CLI:
 
 ```bash
 conda activate Pixal3D
-cd Pixal3D-MCP
+cd $HOME/Pixal3D-MCP/
 
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 python inference.py --image assets/images/0_img.png --output ./output.glb --max_num_tokens 12288
