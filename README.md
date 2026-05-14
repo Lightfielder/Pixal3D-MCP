@@ -50,7 +50,7 @@ Pixal3D-MCP/
 
 ```bash
 git clone https://github.com/Lightfielder/Pixal3D-MCP.git
-cd Pixal3D-MCP
+cd $HOME/Pixal3D-MCP/
 ```
 
 ### 2. Install Dependencies
