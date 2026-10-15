@@ -529,5 +529,5 @@ Sample images are included in the `assets/images/` folder:
 
 ## License
 
-- **Pixal3D (upstream):** Non-commercial license - see TencentARC/Pixal3D for terms
+- **Pixal3D (upstream):** Non-commercial license (See TencentARC/Pixal3D repo for the EULA terms & conditions)
 
